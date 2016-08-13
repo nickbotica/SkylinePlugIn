@@ -6,6 +6,9 @@
 #define MY_PLUGIN_DEVELOPER "Nick Botica (999991)"
 #define MY_PLUGIN_COPYRIGHT "Free to be distributed"
 
+
+// used for debugging
+const int TAG_ITEM_DEBUG = 0;
 // display an 'A' if below transition, otherwise display 'F'
 const int TAG_ITEM_ALTITUDE_PREFIX = 1;
 // not sure if needed anymore
@@ -22,6 +25,7 @@ CSkylinePlugIn::CSkylinePlugIn()
 		MY_PLUGIN_DEVELOPER,
 		MY_PLUGIN_COPYRIGHT)
 {
+	RegisterTagItemType("Debug", TAG_ITEM_DEBUG);
 	RegisterTagItemType("Altitude prefix (A/F)", TAG_ITEM_ALTITUDE_PREFIX);
 	RegisterTagItemType("Temporary altitude", TAG_ITEM_ALTITUDE_TEMP);
 	RegisterTagItemType("Assigned speed (if set)", TAG_ITEM_SPEED_ASSIGNED);
@@ -50,66 +54,71 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 
 	switch (ItemCode) {
 
-	case TAG_ITEM_ALTITUDE_PREFIX: {
+		case TAG_ITEM_DEBUG: {
 
-		if (!RadarTarget.IsValid()) {
-			return;
-		}
+				snprintf(sItemString, 16, "%d", RadarTarget.GetPosition().GetFlightLevel());
+		} break;
 
-		if (RadarTarget.GetPosition().GetFlightLevel() >= GetTransitionAltitude() - 50) {
-			snprintf(sItemString, 16, "F");
-		}
-		else {
-			snprintf(sItemString, 16, "A");
-		}
-	} break;
+		case TAG_ITEM_ALTITUDE_PREFIX:{
 
-
-	case TAG_ITEM_ALTITUDE_TEMP: {
-
-		if (!RadarTarget.IsValid() && !FlightPlan.IsValid()) {
-			return;
-		}
-
-		int currentFL = RadarTarget.GetPosition().GetFlightLevel();
-		int tempAlt = FlightPlan.GetControllerAssignedData().GetClearedAltitude();
-		int finalAlt = FlightPlan.GetFinalAltitude();
-
-		// if cleared for instrument approach. Placeholder
-		if (tempAlt == 1) {
-			snprintf(sItemString, 16, "ILS");
-		}
-		// if cleared visual approach. Placeholder
-		else if (tempAlt == 2) {
-			snprintf(sItemString, 16, "VIS");
-		}
-		// if aircraft is cruising at final altitude display nothing.
-		else if (currentFL == finalAlt) {
-			snprintf(sItemString, 16, "");
-		}
-		// no temp alt set
-		else if (tempAlt == 0) {
-			snprintf(sItemString, 16, "%d", finalAlt);
-		}
-		// if a temp altitude is set
-		else if (tempAlt >= 100) {
-			snprintf(sItemString, 16, "%d", tempAlt);
-		}
-
-	} break;
+			if (!RadarTarget.IsValid()) {
+				return;
+			}
+			// Above transition, e.g. 12,950 feet
+			if (RadarTarget.GetPosition().GetFlightLevel() >= GetTransitionAltitude() - 50) {
+				snprintf(sItemString, 16, "F");
+			}
+			else {
+				snprintf(sItemString, 16, "A");
+			}
+		} break;
 
 
-	case TAG_ITEM_SPEED_ASSIGNED: {
+		case TAG_ITEM_ALTITUDE_TEMP: {
 
-		if (!FlightPlan.IsValid()) {
-			return;
-		}
+			if (!RadarTarget.IsValid() && !FlightPlan.IsValid()) {
+				return;
+			}
 
-		int asgdSpeed = FlightPlan.GetControllerAssignedData().GetAssignedSpeed();
+			int currentFL = RadarTarget.GetPosition().GetFlightLevel();
+			int tempAlt = FlightPlan.GetControllerAssignedData().GetClearedAltitude();
+			int finalAlt = FlightPlan.GetFinalAltitude();
 
-		if (asgdSpeed != 0) {
-			snprintf(sItemString, 16, "%03dKT", asgdSpeed);
-		}
-	} break;
+			// if cleared for instrument approach. Placeholder
+			if (tempAlt == 1) {
+				snprintf(sItemString, 16, "ILS");
+			}
+			// if cleared visual approach. Placeholder
+			else if (tempAlt == 2) {
+				snprintf(sItemString, 16, "VIS");
+			}
+			// if aircraft is cruising at final altitude +-50ft display nothing
+			else if ((currentFL >= finalAlt - 50) && (currentFL < finalAlt + 50)) {
+				snprintf(sItemString, 16, "");
+			}
+			// no temp alt set display FP final alt
+			else if (tempAlt == 0) {
+				snprintf(sItemString, 16, "%03d", finalAlt / 100);
+			}
+			// if a temp altitude is set display it
+			else if (tempAlt >= 100) {
+				snprintf(sItemString, 16, "%03d", tempAlt / 100);
+			}
+
+		} break;
+
+
+		case TAG_ITEM_SPEED_ASSIGNED: {
+
+			if (!FlightPlan.IsValid()) {
+				return;
+			}
+
+			int asgdSpeed = FlightPlan.GetControllerAssignedData().GetAssignedSpeed();
+
+			if (asgdSpeed != 0) {
+				snprintf(sItemString, 16, "%03dKT", asgdSpeed);
+			}
+		} break;
 	}
 }
