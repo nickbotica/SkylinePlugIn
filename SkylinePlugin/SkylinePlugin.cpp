@@ -56,7 +56,7 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 
 		case TAG_ITEM_DEBUG: {
 
-				snprintf(sItemString, 16, "%d", RadarTarget.GetPosition().GetFlightLevel());
+				snprintf(sItemString, 16, "%d", FlightPlan.GetControllerAssignedData().GetClearedAltitude());
 		} break;
 
 		case TAG_ITEM_ALTITUDE_PREFIX:{
@@ -95,6 +95,10 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 			else if (tempAlt == 2) {
 				snprintf(sItemString, 16, "VIS");
 			}
+			// if a temp altitude is set display it
+			else if (tempAlt >= 100) {
+				snprintf(sItemString, 16, "%03d", tempAlt / 100);
+			}
 			// if aircraft is cruising at final altitude +-50ft display nothing
 			else if ((currentFL >= finalAlt - 50) && (currentFL < finalAlt + 50)) {
 				snprintf(sItemString, 16, "");
@@ -102,10 +106,6 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 			// no temp alt set display FP final alt
 			else if (tempAlt == 0) {
 				snprintf(sItemString, 16, "%03d", finalAlt / 100);
-			}
-			// if a temp altitude is set display it
-			else if (tempAlt >= 100) {
-				snprintf(sItemString, 16, "%03d", tempAlt / 100);
 			}
 
 		} break;
