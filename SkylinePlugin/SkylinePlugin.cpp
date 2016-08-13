@@ -75,7 +75,10 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 
 
 		case TAG_ITEM_ALTITUDE_TEMP: {
-
+			/*
+			If no controller is online so no descent altidude has been given, the AC will descend
+			when ready and the tag will display the flight plan final alt all the way to the ground. 
+			*/
 			if (!RadarTarget.IsValid() && !FlightPlan.IsValid()) {
 				return;
 			}
