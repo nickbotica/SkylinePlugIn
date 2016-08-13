@@ -2,7 +2,7 @@
 #include "SkylinePlugIn.h"
 
 #define MY_PLUGIN_NAME      "Skyline"
-#define MY_PLUGIN_VERSION   "0.1.3"
+#define MY_PLUGIN_VERSION   "0.1.4"
 #define MY_PLUGIN_DEVELOPER "Nick Botica (999991)"
 #define MY_PLUGIN_COPYRIGHT "Free to be distributed"
 
@@ -31,13 +31,11 @@ CSkylinePlugIn::CSkylinePlugIn()
 	RegisterTagItemType("Assigned speed (if set)", TAG_ITEM_SPEED_ASSIGNED);
 }
 
-
 //---~CSkylinePlugIn-----------------------------------------------
 
 CSkylinePlugIn::~CSkylinePlugIn()
 {
 }
-
 
 //---OnGetTagItem----------------------------------------------------
 
@@ -56,7 +54,7 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 
 		case TAG_ITEM_DEBUG: {
 
-				snprintf(sItemString, 16, "%d", FlightPlan.GetControllerAssignedData().GetClearedAltitude());
+			snprintf(sItemString, 16, "%d", FlightPlan.GetControllerAssignedData().GetClearedAltitude());
 		} break;
 
 		case TAG_ITEM_ALTITUDE_PREFIX:{
