@@ -102,7 +102,7 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 				snprintf(sItemString, 16, "");
 			}
 			// no temp alt set display FP final alt
-			else if (tempAlt == 0) {
+			else {
 				snprintf(sItemString, 16, "%03d", finalAlt / 100);
 			}
 
@@ -117,8 +117,11 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 
 			int asgdSpeed = FlightPlan.GetControllerAssignedData().GetAssignedSpeed();
 
-			if (asgdSpeed != 0) {
+			if (asgdSpeed > 0) {
 				snprintf(sItemString, 16, "%03dKT", asgdSpeed);
+			}
+			else {
+				snprintf(sItemString, 16, "");
 			}
 		} break;
 	}
