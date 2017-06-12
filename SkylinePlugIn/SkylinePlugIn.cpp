@@ -73,9 +73,13 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 					snprintf(sItemString, 16, "A");
 				}
 			}
-			// The FlightPlan alone can't have an altitude. Hmm?
+			// For Flightplan track
 			else if (FlightPlan.IsValid()) {
-				return;
+				if (FlightPlan.GetFPTrackPosition().GetFlightLevel() >= GetTransitionAltitude() - 50) {
+					snprintf(sItemString, 16, "F");
+				} else {
+					snprintf(sItemString, 16, "A");
+				}
 			}
 			else {
 				return;
