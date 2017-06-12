@@ -152,7 +152,7 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 				return;
 			}
 
-			int groundSpeed = RadarTarget.GetGS();
+			int groundSpeed = RadarTarget.GetPosition().GetReportedGS();
 
 			snprintf(sItemString, 16, "%3d", groundSpeed);
 		} break;
