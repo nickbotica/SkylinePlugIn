@@ -54,7 +54,6 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 	double * pFontSize)
 {
 
-
 	switch (ItemCode) {
 
 		case TAG_ITEM_DEBUG: {
@@ -109,13 +108,13 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 			else if (tempAlt == 2) {
 				snprintf(sItemString, 16, "VIS");
 			}
-			// if a temp altitude is set display it
-			else if (tempAlt >= 100) {
+			// if a temp altitude is set and it's not the final alt, display it
+			else if ((tempAlt >= 100) && (tempAlt != finalAlt)) {
 				snprintf(sItemString, 16, "%03d", tempAlt / 100);
 			}
 			// if aircraft is cruising at final altitude +-50ft display nothing
 			else if ((currentFL >= finalAlt - 50) && (currentFL < finalAlt + 50)) {
-				snprintf(sItemString, 16, "");
+				snprintf(sItemString, 16, "   ");
 			}
 			// no temp alt set display FP final alt
 			else {
