@@ -15,6 +15,9 @@ const int TAG_ITEM_ALTITUDE_PREFIX = 1;
 const int TAG_ITEM_ALTITUDE_TEMP = 2;
 // Display the controller assigned speed with appended "KT"
 const int TAG_ITEM_SPEED_ASSIGNED = 3;
+// Display the ground speed with correct formatting
+const int TAG_ITEM_GROUND_SPEED = 4;
+
 
 //---CSkylinePlugIn------------------------------------------------
 
@@ -29,6 +32,8 @@ CSkylinePlugIn::CSkylinePlugIn()
 	RegisterTagItemType("Altitude prefix (A/F)", TAG_ITEM_ALTITUDE_PREFIX);
 	RegisterTagItemType("Temporary altitude", TAG_ITEM_ALTITUDE_TEMP);
 	RegisterTagItemType("Assigned speed (if set)", TAG_ITEM_SPEED_ASSIGNED);
+	RegisterTagItemType("Ground speed", TAG_ITEM_GROUND_SPEED);
+
 }
 
 //---~CSkylinePlugIn-----------------------------------------------
@@ -57,18 +62,25 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 			snprintf(sItemString, 16, "%d", FlightPlan.GetControllerAssignedData().GetClearedAltitude());
 		} break;
 
+
 		case TAG_ITEM_ALTITUDE_PREFIX:{
 
-			if (!RadarTarget.IsValid()) {
+			if (RadarTarget.IsValid()) {
+			// Above transition, e.g. 12,950 feet
+				if (RadarTarget.GetPosition().GetFlightLevel() >= GetTransitionAltitude() - 50) {
+					snprintf(sItemString, 16, "F");
+				} else {
+					snprintf(sItemString, 16, "A");
+				}
+			}
+			// The FlightPlan alone can't have an altitude. Hmm?
+			else if (FlightPlan.IsValid()) {
 				return;
 			}
-			// Above transition, e.g. 12,950 feet
-			if (RadarTarget.GetPosition().GetFlightLevel() >= GetTransitionAltitude() - 50) {
-				snprintf(sItemString, 16, "F");
-			}
 			else {
-				snprintf(sItemString, 16, "A");
+				return;
 			}
+
 		} break;
 
 
@@ -116,13 +128,29 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 			}
 
 			int asgdSpeed = FlightPlan.GetControllerAssignedData().GetAssignedSpeed();
+			int asgdMach = FlightPlan.GetControllerAssignedData().GetAssignedMach();
 
 			if (asgdSpeed > 0) {
 				snprintf(sItemString, 16, "%03dKT", asgdSpeed);
 			}
+			else if (asgdMach > 0) {
+				snprintf(sItemString, 16, "%03dMa", asgdMach);
+			}
 			else {
 				snprintf(sItemString, 16, "");
 			}
+		} break;
+
+		// Print with no leading 0's
+		case TAG_ITEM_GROUND_SPEED:
+		{
+			if (!RadarTarget.IsValid()) {
+				return;
+			}
+
+			int groundSpeed = RadarTarget.GetGS();
+
+			snprintf(sItemString, 16, "%3d", groundSpeed);
 		} break;
 	}
 }
