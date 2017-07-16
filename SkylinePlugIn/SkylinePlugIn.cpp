@@ -2,7 +2,7 @@
 #include "SkylinePlugIn.h"
 
 #define MY_PLUGIN_NAME      "Skyline"
-#define MY_PLUGIN_VERSION   "0.1.4"
+#define MY_PLUGIN_VERSION   "0.1.1" // Update resource version numbers as well
 #define MY_PLUGIN_DEVELOPER "Nick Botica (999991)"
 #define MY_PLUGIN_COPYRIGHT "Free to be distributed"
 
@@ -28,7 +28,7 @@ CSkylinePlugIn::CSkylinePlugIn()
 		MY_PLUGIN_DEVELOPER,
 		MY_PLUGIN_COPYRIGHT)
 {
-	RegisterTagItemType("Debug", TAG_ITEM_DEBUG);
+	//RegisterTagItemType("Debug", TAG_ITEM_DEBUG);
 	RegisterTagItemType("Altitude prefix (A/F)", TAG_ITEM_ALTITUDE_PREFIX);
 	RegisterTagItemType("Temporary altitude", TAG_ITEM_ALTITUDE_TEMP);
 	RegisterTagItemType("Assigned speed (if set)", TAG_ITEM_SPEED_ASSIGNED);
@@ -57,7 +57,6 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 	switch (ItemCode) {
 
 		case TAG_ITEM_DEBUG: {
-
 			snprintf(sItemString, 16, "%d", FlightPlan.GetControllerAssignedData().GetClearedAltitude());
 		} break;
 
@@ -100,11 +99,11 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 			int tempAlt = FlightPlan.GetControllerAssignedData().GetClearedAltitude();
 			int finalAlt = FlightPlan.GetFinalAltitude();
 
-			// if cleared for instrument approach. Placeholder
+			// if cleared for instrument approach
 			if (tempAlt == 1) {
-				snprintf(sItemString, 16, "ILS");
+				snprintf(sItemString, 16, "APP");
 			}
-			// if cleared visual approach. Placeholder
+			// if cleared visual approach
 			else if (tempAlt == 2) {
 				snprintf(sItemString, 16, "VIS");
 			}
