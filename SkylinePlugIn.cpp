@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <string>
 #include "SkylinePlugIn.h"
 
 #define MY_PLUGIN_NAME      "Skyline"
@@ -7,16 +8,20 @@
 #define MY_PLUGIN_COPYRIGHT "Free to be distributed"
 
 
-// used for debugging
-const int TAG_ITEM_DEBUG = 0;
-// display an 'A' if below transition, otherwise display 'F'
-const int TAG_ITEM_ALTITUDE_PREFIX = 1;
-// not sure if needed anymore
-const int TAG_ITEM_ALTITUDE_TEMP = 2;
-// Display the controller assigned speed with appended "KT"
-const int TAG_ITEM_SPEED_ASSIGNED = 3;
-// Display the ground speed with correct formatting
-const int TAG_ITEM_GROUND_SPEED = 4;
+const int SL_TAG_ITEM_ALTITUDE_PREFIX = 1;
+const int SL_TAG_ITEM_ALTITUDE_TEMP = 2;
+const int SL_TAG_ITEM_SPEED_ASSIGNED = 3;
+const int SL_TAG_ITEM_GROUND_SPEED = 4;
+const int SL_TAG_ITEM_CALLSIGN = 5;
+const int SL_TAG_ITEM_AIRCRAFT_CATEGORY = 6;
+const int SL_TAG_ITEM_AIRCRAFT_TYPE = 7;
+const int SL_TAG_ITEM_ALTITUDE = 8;
+const int SL_TAG_ITEM_VERTICAL_SPEED_INDICATOR = 9;
+const int SL_TAG_ITEM_TRACKING_CONTROLLER_ID = 10;
+const int SL_TAG_ITEM_DESTINATION = 11;
+const int SL_TAG_ITEM_ASSIGNED_SQUAWK = 12;
+const int SL_TAG_ITEM_SCRATCH_PAD = 13;
+const int SL_TAG_ITEM_ASSIGNED_STAR = 14;
 
 
 //---CSkylinePlugIn------------------------------------------------
@@ -28,11 +33,20 @@ CSkylinePlugIn::CSkylinePlugIn()
 		MY_PLUGIN_DEVELOPER,
 		MY_PLUGIN_COPYRIGHT)
 {
-	//RegisterTagItemType("Debug", TAG_ITEM_DEBUG);
-	RegisterTagItemType("Altitude prefix (A/F)", TAG_ITEM_ALTITUDE_PREFIX);
-	RegisterTagItemType("Temporary altitude", TAG_ITEM_ALTITUDE_TEMP);
-	RegisterTagItemType("Assigned speed (if set)", TAG_ITEM_SPEED_ASSIGNED);
-	RegisterTagItemType("Ground speed", TAG_ITEM_GROUND_SPEED);
+	RegisterTagItemType(".Altitude prefix (A/F)", SL_TAG_ITEM_ALTITUDE_PREFIX);
+	RegisterTagItemType(".Temporary altitude", SL_TAG_ITEM_ALTITUDE_TEMP);
+	RegisterTagItemType(".Assigned speed (if set)", SL_TAG_ITEM_SPEED_ASSIGNED);
+	RegisterTagItemType(".Ground speed", SL_TAG_ITEM_GROUND_SPEED);
+	RegisterTagItemType(".Callsign", SL_TAG_ITEM_CALLSIGN);
+	RegisterTagItemType(".Aircraft category", SL_TAG_ITEM_AIRCRAFT_CATEGORY);
+	RegisterTagItemType(".Aircraft type", SL_TAG_ITEM_AIRCRAFT_TYPE);
+	RegisterTagItemType(".Altitude", SL_TAG_ITEM_ALTITUDE);
+	RegisterTagItemType(".Vertical speed indicator", SL_TAG_ITEM_VERTICAL_SPEED_INDICATOR);
+	RegisterTagItemType(".Tracking controller ID", SL_TAG_ITEM_TRACKING_CONTROLLER_ID);
+	RegisterTagItemType(".Destination airport", SL_TAG_ITEM_DESTINATION);
+	RegisterTagItemType(".Assigned squawk", SL_TAG_ITEM_ASSIGNED_SQUAWK);
+	RegisterTagItemType(".Scratch pad", SL_TAG_ITEM_SCRATCH_PAD);
+	RegisterTagItemType(".Assigned STAR", SL_TAG_ITEM_ASSIGNED_STAR);
 
 }
 
@@ -51,17 +65,31 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 	char sItemString[16],
 	int * pColorCode,
 	COLORREF * pRGB,
-	double * pFontSize)
-{
+	double * pFontSize) {
+
+	// Set the colour based on the distance to the active sector.
+	if (!FlightPlan.IsValid()) { return; }
+
+	int entryTime = FlightPlan.GetSectorEntryMinutes();
+
+	// aircraft either already in your sector OR 10 minutes out = green
+	if (entryTime >= 0 && entryTime <= 10) {
+		* pColorCode = TAG_COLOR_ASSUMED;
+	// aircraft between 20-10 minutes away from your sector = blue
+	} else if (entryTime >= 11 && entryTime <= 20) {
+		* pColorCode = TAG_COLOR_NOTIFIED;
+	// aircraft is not coming into your sector = white
+	} else {
+		//TODO: for debugging
+		//* pColorCode = TAG_COLOR_NON_CONCERNED;
+		* pColorCode = TAG_COLOR_ASSUMED;
+	}
+
 
 	switch (ItemCode) {
 
-		case TAG_ITEM_DEBUG: {
-			snprintf(sItemString, 16, "%d", FlightPlan.GetControllerAssignedData().GetClearedAltitude());
-		} break;
-
-
-		case TAG_ITEM_ALTITUDE_PREFIX:{
+		// Displays 'A' or 'F' if below or above set transition.
+		case SL_TAG_ITEM_ALTITUDE_PREFIX:{
 
 			if (RadarTarget.IsValid()) {
 			// Above transition, e.g. 12,950 feet
@@ -86,7 +114,7 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 		} break;
 
 
-		case TAG_ITEM_ALTITUDE_TEMP: {
+		case SL_TAG_ITEM_ALTITUDE_TEMP: {
 			/*
 			If no controller is online so no descent altidude has been given, the AC will descend
 			when ready and the tag will display the flight plan final alt all the way to the ground. 
@@ -123,7 +151,7 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 		} break;
 
 
-		case TAG_ITEM_SPEED_ASSIGNED: {
+		case SL_TAG_ITEM_SPEED_ASSIGNED: {
 
 			if (!FlightPlan.IsValid()) {
 				return;
@@ -143,8 +171,9 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 			}
 		} break;
 
+
 		// Print with no leading 0's
-		case TAG_ITEM_GROUND_SPEED:
+		case SL_TAG_ITEM_GROUND_SPEED:
 		{
 			if (!RadarTarget.IsValid()) {
 				return;
@@ -154,5 +183,96 @@ void CSkylinePlugIn::OnGetTagItem(CFlightPlan FlightPlan,
 
 			snprintf(sItemString, 16, "%3d", groundSpeed);
 		} break;
+
+
+		case SL_TAG_ITEM_CALLSIGN: {
+			snprintf(sItemString, 16, FlightPlan.GetCallsign());
+		} break;
+
+
+		case SL_TAG_ITEM_AIRCRAFT_CATEGORY:	{
+			snprintf(sItemString, 16, "%c", FlightPlan.GetFlightPlanData().GetAircraftWtc());
+		} break;
+
+
+		// This could be in the form of e.g T/B738/L, B738/L, B738
+		case SL_TAG_ITEM_AIRCRAFT_TYPE:
+		{
+			//TODO: fix me
+			std::string str = FlightPlan.GetFlightPlanData().GetAircraftInfo();
+			unsigned first = str.find("/") + 1;
+			unsigned last = str.find_last_of("/");
+			std::string acType = str.substr(first, last-first);
+
+			snprintf(sItemString, 16, acType.c_str());
+		} break;
+
+
+		// below 0 just show as 000
+		case SL_TAG_ITEM_ALTITUDE:
+		{
+			int currentFL = RadarTarget.GetPosition().GetFlightLevel() / 100;
+			
+			if (currentFL <= 0) {
+				snprintf(sItemString, 16, "000");
+			} else {
+				//TODO: fix rounding
+				snprintf(sItemString, 16, "%03d", currentFL);
+			}
+		} break;
+
+
+		// Greater than or less than 100
+		case SL_TAG_ITEM_VERTICAL_SPEED_INDICATOR:
+		{
+			int verticalSpeed = RadarTarget.GetVerticalSpeed();
+
+			if (verticalSpeed < -100)
+				snprintf(sItemString, 16, "|");
+			else if (verticalSpeed > 100)
+				snprintf(sItemString, 16, "^");
+			else
+				snprintf(sItemString, 16, " ");
+		} break;
+
+
+		case SL_TAG_ITEM_TRACKING_CONTROLLER_ID:
+		{
+			snprintf(sItemString, 16, FlightPlan.GetTrackingControllerId());
+		} break;
+
+
+		case SL_TAG_ITEM_DESTINATION:
+		{
+			snprintf(sItemString, 16, FlightPlan.GetFlightPlanData().GetDestination());
+		} break;
+
+
+		case SL_TAG_ITEM_ASSIGNED_SQUAWK:
+		{
+			const char * squawkReceived = RadarTarget.GetPosition().GetSquawk();
+			const char * squawkAssigned = FlightPlan.GetControllerAssignedData().GetSquawk();
+			
+			// if both squawks are the same
+			if (strcmp(squawkReceived, squawkAssigned) == 0) {
+				snprintf(sItemString, 16, squawkReceived);
+			} else {
+				*pColorCode = TAG_COLOR_INFORMATION;
+				snprintf(sItemString, 16, squawkAssigned);
+			}
+		} break;
+
+
+		case SL_TAG_ITEM_SCRATCH_PAD:
+		{
+			snprintf(sItemString, 16, FlightPlan.GetControllerAssignedData().GetScratchPadString());
+		} break;
+
+
+		case SL_TAG_ITEM_ASSIGNED_STAR:
+		{
+			snprintf(sItemString, 16, FlightPlan.GetFlightPlanData().GetStarName());
+		} break;
+
 	}
 }
